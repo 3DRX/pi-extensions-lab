@@ -10,6 +10,7 @@ This repository is intended to hold small, focused extensions that make coding-a
 |---|---|
 | [`packages/ask-mode`](packages/ask-mode) | Pi extension that adds an opt-in mode for rich one-at-a-time user questions. |
 | [`packages/parent-file-completion`](packages/parent-file-completion) | Pi extension that adds fuzzy autocomplete for parent-relative `@../...` file references. |
+| [`packages/reasoning-level`](packages/reasoning-level) | Pi extension that adds a model-aware slash command for viewing and changing reasoning effort. |
 | [`packages/side-chat`](packages/side-chat) | Pi extension that adds ephemeral side chats in a right-side overlay panel. |
 | [`packages/tmux-title`](packages/tmux-title) | Pi extension that renames the terminal and tmux window title to `pi` on startup. |
 | [`packages/todo-list`](packages/todo-list) | Pi extension that lets the agent plan and track complex tasks in a todo list. |

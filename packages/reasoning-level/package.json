@@ -1,0 +1,42 @@
+{
+  "name": "@3drx/pi-reasoning-level",
+  "version": "0.1.0",
+  "description": "Pi extension that adds a model-aware slash command for viewing and changing reasoning effort.",
+  "type": "module",
+  "license": "MIT",
+  "author": "3DRX",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/3DRX/pi-extensions-lab.git",
+    "directory": "packages/reasoning-level"
+  },
+  "homepage": "https://github.com/3DRX/pi-extensions-lab/tree/main/packages/reasoning-level#readme",
+  "bugs": {
+    "url": "https://github.com/3DRX/pi-extensions-lab/issues"
+  },
+  "keywords": [
+    "pi-package",
+    "pi",
+    "pi-extension",
+    "reasoning",
+    "thinking-level",
+    "reasoning-effort"
+  ],
+  "pi": {
+    "extensions": [
+      "./src/index.ts"
+    ]
+  },
+  "files": [
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-ai": "*",
+    "@earendil-works/pi-coding-agent": "*"
+  }
+}
