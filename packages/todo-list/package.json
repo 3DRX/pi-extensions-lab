@@ -1,0 +1,46 @@
+{
+  "name": "@3drx/pi-todo-list",
+  "version": "0.1.0",
+  "description": "Pi extension that lets the agent plan and track complex tasks in a todo list.",
+  "type": "module",
+  "license": "MIT",
+  "author": "3DRX",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/3DRX/pi-extensions-lab.git",
+    "directory": "packages/todo-list"
+  },
+  "homepage": "https://github.com/3DRX/pi-extensions-lab/tree/main/packages/todo-list#readme",
+  "bugs": {
+    "url": "https://github.com/3DRX/pi-extensions-lab/issues"
+  },
+  "keywords": [
+    "pi-package",
+    "pi",
+    "pi-extension",
+    "todo",
+    "todo-list",
+    "task-tracking",
+    "planning"
+  ],
+  "pi": {
+    "extensions": [
+      "./src/index.ts"
+    ]
+  },
+  "files": [
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "typebox": "^1.3.0"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "*",
+    "@earendil-works/pi-tui": "*"
+  }
+}
