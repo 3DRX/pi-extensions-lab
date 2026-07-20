@@ -32,6 +32,7 @@
     "pack:dry-run": "pnpm -r --filter './packages/*' pack --dry-run"
   },
   "devDependencies": {
+    "@earendil-works/pi-ai": "^0.79.9",
     "@earendil-works/pi-coding-agent": "^0.79.9",
     "@earendil-works/pi-tui": "^0.79.9",
     "@types/node": "^24.0.0",
