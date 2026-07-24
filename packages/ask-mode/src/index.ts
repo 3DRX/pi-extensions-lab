@@ -13,6 +13,8 @@ import { Type } from "typebox";
 
 const MODE_NAME = "ask-mode";
 const TOOL_NAME = "ask_user_choice";
+const CONTINUE_AFTER_ANSWER =
+	"Continue the current agent run now. Use this answer to decide the next step. If another question is needed, call ask_user_choice again in the next assistant response; otherwise proceed with the task. Do not wait for a new user message.";
 
 interface ChoiceOption {
 	value?: string;
@@ -286,7 +288,7 @@ class AskChoiceComponent implements Focusable {
 
 export default function askModeExtension(pi: ExtensionAPI): void {
 	let enabled = false;
-	let askToolSeenThisTurn = false;
+	let askToolSeenThisResponse = false;
 
 	function applyActiveToolState(): void {
 		const active = pi.getActiveTools();
@@ -343,11 +345,12 @@ export default function askModeExtension(pi: ExtensionAPI): void {
 		name: TOOL_NAME,
 		label: "Ask User",
 		description:
-			"Ask the user exactly one question with any number of concrete options plus an automatic custom-answer option. Use only while ask mode is enabled.",
-		promptSnippet: "Ask the user one rich multiple-choice question and wait for the answer",
+			"Ask the user exactly one question with any number of concrete options plus an automatic custom-answer option. The call returns the user's answer so you can continue the same agent run. Use only while ask mode is enabled.",
+		promptSnippet: "Ask one rich multiple-choice question, receive the answer, then continue the current agent run",
 		promptGuidelines: [
 			"Use ask_user_choice in ask mode when the user's preference, environment, or a technical tradeoff would materially affect what you do next.",
-			"Ask_user_choice must ask exactly one question per tool call and must not be called more than once in the same assistant turn; wait for the user's answer before deciding whether another question is needed.",
+			"Ask_user_choice must ask exactly one question per tool call. Never emit multiple ask_user_choice calls in the same assistant response or tool batch; receive the current answer before deciding what to ask next.",
+			"After ask_user_choice returns an answer, continue the current agent run immediately. If another question is needed, call ask_user_choice again in the next assistant response; do not stop and wait for a new user message merely because one question was answered.",
 			"When calling ask_user_choice, include every meaningful concrete option in options with detailed descriptions; do not impose an artificial maximum number of options.",
 			"When a decision has two concrete choices, pass the two choices as options; ask_user_choice automatically appends a third custom-response choice for the user.",
 			"Do not include an Other/custom option in ask_user_choice options because the UI automatically appends one at the end.",
@@ -425,7 +428,12 @@ export default function askModeExtension(pi: ExtensionAPI): void {
 
 			if (answer.wasCustom) {
 				return {
-					content: [{ type: "text", text: `User chose ${answer.letter} and wrote: ${answer.value}` }],
+					content: [
+						{
+							type: "text",
+							text: `User chose ${answer.letter} and wrote: ${answer.value}\n\n${CONTINUE_AFTER_ANSWER}`,
+						},
+					],
 					details,
 				};
 			}
@@ -434,7 +442,7 @@ export default function askModeExtension(pi: ExtensionAPI): void {
 				content: [
 					{
 						type: "text",
-						text: `User selected ${answer.letter}. ${answer.label} (value: ${answer.value})`,
+						text: `User selected ${answer.letter}. ${answer.label} (value: ${answer.value})\n\n${CONTINUE_AFTER_ANSWER}`,
 					},
 				],
 				details,
@@ -476,7 +484,7 @@ export default function askModeExtension(pi: ExtensionAPI): void {
 	});
 
 	pi.on("turn_start", async () => {
-		askToolSeenThisTurn = false;
+		askToolSeenThisResponse = false;
 	});
 
 	pi.on("tool_call", async (event) => {
@@ -489,15 +497,15 @@ export default function askModeExtension(pi: ExtensionAPI): void {
 			};
 		}
 
-		if (askToolSeenThisTurn) {
+		if (askToolSeenThisResponse) {
 			return {
 				block: true,
 				reason:
-					"Ask mode allows only one ask_user_choice call per assistant turn. Wait for the first answer, then ask the next question in a later turn if still needed.",
+					"Ask mode allows only one ask_user_choice call per assistant response. Receive the first answer, then ask the next question in the next assistant response within the same agent run if still needed.",
 			};
 		}
 
-		askToolSeenThisTurn = true;
+		askToolSeenThisResponse = true;
 	});
 
 	pi.on("before_agent_start", async () => {
@@ -513,8 +521,10 @@ Use the ask_user_choice tool for these questions.
 
 Rules:
 - Ask exactly one question per ask_user_choice call.
-- Do not call ask_user_choice more than once in the same assistant turn. Wait for the tool result before deciding whether to ask a follow-up question.
-- The answer to the current question may affect the next question, so ask questions sequentially.
+- Never emit multiple ask_user_choice calls in the same assistant response or tool batch. The answer to the current question may affect the next question, so questions must be chosen sequentially.
+- Each ask_user_choice call pauses for the user's answer and returns it as a tool result. After receiving that result, continue the current agent run immediately.
+- If the answer means another question is needed, call ask_user_choice again in the next assistant response. "One question at a time" does not mean one question per user prompt or agent run, and it does not mean you should stop and wait for a new user message after each answer.
+- Once you have enough information, proceed with the user's task in the same agent run.
 - Provide all meaningful concrete options; there is no artificial maximum number of options.
 - If there are two concrete technical options, provide those two options. The UI will add a third custom-response option automatically.
 - If there are six concrete technical options, provide all six. The UI will add a seventh custom-response option automatically.
