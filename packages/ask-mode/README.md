@@ -32,16 +32,18 @@ Ask mode is intentionally enabled only by the slash command. When disabled, the 
 
 ## Agent behavior
 
-While ask mode is active, the extension injects per-turn instructions that tell the agent to:
+While ask mode is active, the extension injects per-run instructions that tell the agent to:
 
 - be more willing to ask when user preference, constraints, environment, or a technical tradeoff matters
 - ask exactly one question per `ask_user_choice` call
-- never call `ask_user_choice` more than once in the same assistant turn
-- wait for the current answer before deciding whether to ask a follow-up question
+- never emit multiple `ask_user_choice` calls in the same assistant response or tool batch
+- wait for the current tool result before deciding whether a follow-up question is needed
+- continue the same agent run after each answer, asking the next question in the next assistant response when needed
+- proceed with the task as soon as it has enough information instead of waiting for another user message
 - include every meaningful concrete option, with detailed explanations
 - not include its own "Other" option, because the UI appends a custom-response option automatically
 
-The extension also enforces the one-question-at-a-time rule by blocking a second `ask_user_choice` call in the same assistant turn.
+Here, **one question at a time** means sequential rather than concurrent. It does not mean one question per user prompt or one question per agent run. The extension enforces this by blocking a second `ask_user_choice` call in the same assistant response, while allowing another call after the first answer has returned and Pi starts the next model step.
 
 ## Local development
 
