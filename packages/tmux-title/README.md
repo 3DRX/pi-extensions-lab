@@ -13,7 +13,7 @@ On `session_start`, the extension can:
 - run `tmux set-window-option automatic-rename off` so tmux does not rename it back to `node`;
 - run `tmux select-pane -T pi` to set the pane title too.
 
-By default it snapshots the previous tmux window name and `automatic-rename` value, then restores them on clean Pi shutdown.
+By default it snapshots the previous tmux window name and `automatic-rename` value, then restores them on clean Pi shutdown. When `automatic-rename` was previously enabled, the saved window name is discarded on restore (tmux has already renamed the window to `node` by the time Pi starts) and tmux is left to recompute the name from the foreground command, so the window goes back to e.g. `zsh` after Pi exits.
 
 ## Install / test locally
 
