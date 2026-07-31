@@ -64,7 +64,10 @@ async function readSnapshot(pi: ExtensionAPI, ctx: ExtensionContext): Promise<Sn
 
 	const [windowName, automaticRename] = await Promise.all([
 		tmux(pi, ["display-message", "-p", "#W"], ctx),
-		tmux(pi, ["show-window-options", "-qv", "automatic-rename"], ctx),
+		// Note: show-window-options does not support -q (unlike show-options).
+		// An unset window option exits 0 with empty output, meaning "inherit
+		// the global/default value" (automatic-rename defaults to on).
+		tmux(pi, ["show-window-options", "-v", "automatic-rename"], ctx),
 	]);
 
 	return { windowName, automaticRename };
@@ -191,7 +194,21 @@ export default function tmuxTitleExtension(pi: ExtensionAPI): void {
 		if (!snapshot || !isTmux()) return;
 
 		const errors: string[] = [];
-		if (snapshot.automaticRename !== null) {
+		const automaticRenameWasEnabled =
+			snapshot.automaticRename === "" || snapshot.automaticRename === "on";
+
+		if (snapshot.automaticRename === "") {
+			// The window option was unset: clear our override so the window
+			// inherits the global/default value again. tmux immediately
+			// recomputes the window name from the foreground command.
+			await runTmuxCommand(
+				pi,
+				["set-window-option", "-u", "automatic-rename"],
+				ctx,
+				errors,
+				"restore automatic-rename",
+			);
+		} else if (snapshot.automaticRename !== null) {
 			await runTmuxCommand(
 				pi,
 				["set-window-option", "automatic-rename", snapshot.automaticRename],
@@ -200,7 +217,14 @@ export default function tmuxTitleExtension(pi: ExtensionAPI): void {
 				"restore automatic-rename",
 			);
 		}
-		if (snapshot.windowName !== null) {
+
+		// When automatic-rename was enabled, the window name snapshot is not
+		// meaningful: by the time session_start fires, tmux has already
+		// renamed the window to "node" (Pi runs as a Node.js process). Let
+		// tmux recompute the name instead of restoring the poisoned value.
+		// Only restore the static name when automatic-rename was off, where
+		// the snapshot reflects the user's real window name.
+		if (snapshot.windowName !== null && !automaticRenameWasEnabled) {
 			await runTmuxCommand(pi, ["rename-window", snapshot.windowName], ctx, errors, "restore window name");
 		}
 	}
